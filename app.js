@@ -3,8 +3,11 @@ require('./config/config');
 const models = require('./models');
 require('./global_functions');
 const sessions = require('./controllers/SessionsController');
-
+const bodyParser = require('body-parser');
 const app = express();
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 
 app.get('/', (req, res) => { res.send('Hello World!') })
 
@@ -24,5 +27,6 @@ if (CONFIG.app === 'dev') {
 
 app.get('/sessions', sessions.getAll);
 app.get('/sessions/:sessionId', sessions.get);
-
+app.post('/sessions', sessions.create);
+app.put('/sessions', sessions.update);
 module.exports = app;
