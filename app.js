@@ -1,6 +1,8 @@
 const express = require('express');
 require('./config/config');
 const models = require('./models');
+require('./global_functions');
+const sessions = require('./controllers/SessionsController');
 
 const app = express();
 
@@ -18,5 +20,9 @@ models.sequelize
 if (CONFIG.app === 'dev') {
   models.sequelize.sync();
 }
+
+
+app.get('/sessions', sessions.getAll);
+app.get('/sessions/:sessionId', sessions.get);
 
 module.exports = app;
