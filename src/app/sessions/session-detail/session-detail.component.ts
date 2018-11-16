@@ -23,8 +23,6 @@ export class SessionDetailComponent implements OnInit {
     // fix later
     startTimeAsString = '2018-11-15T23:34';
 
-    formReady = false;
-
     constructor(
         private sessionsService: SessionsService,
         private route: ActivatedRoute,
@@ -40,8 +38,6 @@ export class SessionDetailComponent implements OnInit {
                 .subscribe(
                     (session) => {
                             this.session = session;
-                            this.formReady = true;
-                            console.log('form ready');
                         // TODO CCC: this is hard coded and should be coming from
                         // the new Date(), but ISO String not working right
                         // fix later
@@ -84,7 +80,5 @@ export class SessionDetailComponent implements OnInit {
         this.router.navigate(['sessions']);
         // TODO CCC: we want to show a success message
 
-        // this.sessionsService.createSession(this.session)
-        //     .subscribe();
     }
 }
