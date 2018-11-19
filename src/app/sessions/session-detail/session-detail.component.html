@@ -1,0 +1,15 @@
+<div *ngIf="session" class="row">
+    <div class="col-md-6">
+        <h4>Session Detail</h4>
+        <hr>
+        <label>Name</label>
+        <input type="text" class="form-control" [(ngModel)]="session.name" />
+        <label>Location</label>
+        <input type="text" class="form-control" [(ngModel)]="session.location" />
+        <label>Start Time</label>
+        <input type="datetime-local" class="form-control" [(ngModel)]="session.startTime" />
+        <br>
+        <button type="button" class="btn btn-primary" (click)="submit()">Submit</button>
+        <button type="button" class="btn btn-default" (click)="cancel()">Cancel</button>
+    </div>
+</div>
