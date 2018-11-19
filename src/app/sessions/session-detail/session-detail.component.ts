@@ -1,27 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { SessionsService, ISession } from '../sessions.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { validateConfig } from '@angular/router/src/config';
-
-const defaultSession: ISession = {
-    id: 0,
-    name: '',
-    location: '',
-    startTime: new Date(),
-    createdAt: null,
-    updatedAt: null,
-};
 
 @Component({
     templateUrl: './session-detail.component.html',
 })
 export class SessionDetailComponent implements OnInit {
 
-    session: ISession = { ...defaultSession };
-    // TODO CCC: this is hard coded and should be coming from
-    // the new Date(), but ISO String not working right
-    // fix later
-    startTimeAsString = '2018-11-15T23:34';
+    session: ISession;
 
     constructor(
         private sessionsService: SessionsService,
@@ -37,11 +23,8 @@ export class SessionDetailComponent implements OnInit {
             this.sessionsService.getSessionById(id)
                 .subscribe(
                     (session) => {
-                            this.session = session;
-                        // TODO CCC: this is hard coded and should be coming from
-                        // the new Date(), but ISO String not working right
-                        // fix later
-                        // this.startTimeAsString = '';
+                        session.startTime = new Date(session.startTime).toISOString().slice(0, 16);
+                        this.session = session;
                     },
                     (error) => {
                         // pop a message... return to list
@@ -49,6 +32,8 @@ export class SessionDetailComponent implements OnInit {
                         console.log('error happened');
                     },
                 );
+        } else {
+            this.session = this.sessionsService.getDefaultSession();
         }
     }
 
@@ -66,19 +51,30 @@ export class SessionDetailComponent implements OnInit {
             return;
         }
 
-        this.session.startTime = this.startTimeAsString;
-        console.log(this.session);
-        if (this.session.id) {
+        const session = {...this.session};
+
+        // convert the input elements startTime into the correct format for the API
+        const startTime = new Date(session.startTime);
+        startTime.setHours(startTime.getHours() - (startTime.getTimezoneOffset() / 60));
+        session.startTime = startTime.toISOString();
+
+        if (session.id) {
             // update end point
+            this.sessionsService.updateSession(session)
+                .subscribe(() => {
+                    this.router.navigate(['sessions']);
+                });
         } else {
             // create end point
+            this.sessionsService.createSession(session)
+                .subscribe(() => {
+                    this.router.navigate(['sessions']);
+                });
         }
 
-        // this is what we want to do on success
-        // put this in the success side for the end points
-        // when we get thos working
-        this.router.navigate(['sessions']);
-        // TODO CCC: we want to show a success message
+    }
 
+    cancel(): void {
+        this.router.navigate(['sessions']);
     }
 }
