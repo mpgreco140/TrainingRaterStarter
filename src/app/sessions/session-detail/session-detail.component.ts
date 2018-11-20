@@ -1,80 +1,71 @@
 import { Component, OnInit } from '@angular/core';
-import { SessionsService, ISession } from '../sessions.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ISession, SessionsService } from '../sessions.service';
 
 @Component({
     templateUrl: './session-detail.component.html',
 })
-export class SessionDetailComponent implements OnInit {
+export class SessionsDetailComponent implements OnInit {
 
     session: ISession;
 
     constructor(
-        private sessionsService: SessionsService,
         private route: ActivatedRoute,
         private router: Router,
+        private sessionsService: SessionsService,
     ) { }
 
     ngOnInit() {
-        const idAsString = this.route.snapshot.paramMap.get('entityId');
+        let id: string | number = this.route.snapshot.paramMap.get('sessionId');
         // tslint:disable-next-line:radix
-        const id = isNaN(parseInt(idAsString)) ? 0 : parseInt(idAsString);
-        if (id) {
+        id = isNaN(parseInt(id)) ? 0 : parseInt(id);
+        if (id > 0) {
+            // get from db
             this.sessionsService.getSessionById(id)
-                .subscribe(
-                    (session) => {
-                        session.startTime = new Date(session.startTime).toISOString().slice(0, 16);
-                        this.session = session;
-                    },
-                    (error) => {
-                        // pop a message... return to list
-                        this.router.navigate(['sessions']);
-                        console.log('error happened');
-                    },
-                );
+                .subscribe((session) => {
+                    const startTime = new Date(session.startTime);
+                    startTime.setHours(startTime.getHours() - (startTime.getTimezoneOffset() / 60));
+                    session.startTime = startTime.toISOString().slice(0, 16);
+                    this.session = session;
+                });
         } else {
-            this.session = this.sessionsService.getDefaultSession();
+            // new
+            this.session = {
+                id: 0,
+                name: '',
+                location: '',
+                startTime: this.getLocalDateTime(),
+                createdAt: '',
+                updatedAt: '',
+            };
         }
+    }
+
+    getLocalDateTime(): string {
+        const startTime = new Date();
+        startTime.setHours(startTime.getHours() - (startTime.getTimezoneOffset() / 60));
+        return startTime.toISOString().slice(0, 16);
+    }
+
+    save(): void {
+        if (!this.formValid()) {
+            // TODO CCC: pop message about not valid
+            console.log('form invalid');
+            return;
+        }
+        this.sessionsService.save(this.session)
+            .subscribe((session) => {
+                // TODO CCC: add a success message
+                this.router.navigate(['sessions']);
+            });
     }
 
     private formValid(): boolean {
-        if (this.session.name.trim() && this.session.location.trim()) {
-            return true;
-        }
-        return false;
-    }
-
-    submit(): void {
-        if (!this.formValid()) {
-            // TODO CCC: add not valid message here
-            console.log('form not valid');
-            return;
-        }
-
-        const session = {...this.session};
-
-        // convert the input elements startTime into the correct format for the API
-        const startTime = new Date(session.startTime);
-        startTime.setHours(startTime.getHours() - (startTime.getTimezoneOffset() / 60));
-        session.startTime = startTime.toISOString();
-
-        if (session.id) {
-            // update end point
-            this.sessionsService.updateSession(session)
-                .subscribe(() => {
-                    this.router.navigate(['sessions']);
-                });
-        } else {
-            // create end point
-            this.sessionsService.createSession(session)
-                .subscribe(() => {
-                    this.router.navigate(['sessions']);
-                });
-        }
-
+        return this.session.name && this.session.location ? true : false;
     }
 
     cancel(): void {
         this.router.navigate(['sessions']);
     }
+
 }

@@ -1,24 +1,19 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs/Observable';
+
+// TODO CCC: why do I have to do this for map to come in?
+// tslint:disable-next-line:import-blacklist
+import { Observable } from 'rxjs/observable';
+// import 'rxjs/add/operator/map';
 
 export interface ISession {
   id: number;
   name: string;
   location: string;
   startTime: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
-
-const defaultSession: ISession = {
-  id: 0,
-  name: '',
-  location: '',
-  startTime: null,
-  createdAt: null,
-  updatedAt: null,
-};
 
 @Injectable()
 export class SessionsService {
@@ -26,33 +21,28 @@ export class SessionsService {
     private http: HttpClient,
   ) { }
 
-  private getDefaultStartTime(): string {
-    const startTime = new Date();
-    startTime.setHours(startTime.getHours() - startTime.getTimezoneOffset() / 60);
-    startTime.setMinutes(0);
-    return startTime.toISOString().slice(0, 16);
-  }
-
-  getDefaultSession(): ISession {
-    const session = {...defaultSession};
-    session.startTime = this.getDefaultStartTime();
-    return session;
-  }
-
   getSessions(): Observable<ISession[]> {
     return this.http.get<ISession[]>('http://localhost:3000/sessions');
+      // .map((sessions) => {
+      //   sessions.forEach((session) => {
+      //     const startTime = new Date(session.startTime);
+      //     startTime.setHours(startTime.getHours() - (startTime.getTimezoneOffset() / 60));
+      //     session.startTime = startTime.toISOString();
+      //   });
+      //   return sessions;
+      // });
   }
 
   getSessionById(id: number): Observable<ISession> {
     return this.http.get<ISession>(`http://localhost:3000/sessions/${id}`);
   }
 
-  createSession(session: ISession): Observable<ISession> {
-    return this.http.post<ISession>('http://localhost:3000/sessions', session);
-  }
-
-  updateSession(session: ISession): Observable<ISession> {
-    return this.http.put<ISession>('http://localhost:3000/sessions', session);
+  save(session: ISession): Observable<ISession | number[]> {
+    if (session.id) {
+      return this.http.put<number[]>(`http://localhost:3000/sessions`, session);
+    } else {
+      return this.http.post<ISession>(`http://localhost:3000/sessions`, session);
+    }
   }
 
 }
